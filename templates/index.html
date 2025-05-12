@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Breast Cancer Prediction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to right, #f9fafc, #e4edf9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .container {
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #6c7a89;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      input[type="number"] {
+        padding: 0.75rem 1rem;
+        border: 1px solid #ccd6dd;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: border 0.2s;
+      }
+
+      input[type="number"]:focus {
+        border-color: #3498db;
+        outline: none;
+      }
+
+      button {
+        padding: 0.75rem;
+        background-color: #3498db;
+        border: none;
+        border-radius: 0.5rem;
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      button:hover {
+        background-color: #2980b9;
+      }
+
+      #result {
+        margin-top: 1.5rem;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #34495e;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 1.5rem;
+        }
+
+        input,
+        button {
+          font-size: 0.95rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Breast Cancer Prediction</h1>
+      <p>Enter the required features to predict cancer status</p>
+
+      <form id="predict-form">
+        <input type="number" step="any" name="mean_perimeter" placeholder="Mean Perimeter" required />
+        <input type="number" step="any" name="worst_texture" placeholder="Worst Texture" required />
+        <input type="number" step="any" name="mean_texture" placeholder="Mean Texture" required />
+        <input type="number" step="any" name="worst_perimeter" placeholder="Worst Perimeter" required />
+        <input type="number" step="any" name="mean_radius" placeholder="Mean Radius" required />
+        <input type="number" step="any" name="worst_radius" placeholder="Worst Radius" required />
+        <input type="number" step="any" name="worst_area" placeholder="Worst Area" required />
+        <input type="number" step="any" name="mean_area" placeholder="Mean Area" required />
+        <input type="number" step="any" name="mean_smoothness" placeholder="Mean Smoothness" required />
+        <input type="number" step="any" name="worst_smoothness" placeholder="Worst Smoothness" required />
+        <button type="submit">Predict</button>
+      </form>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      document
+        .getElementById("predict-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+          const json = Object.fromEntries(formData.entries());
+
+          Object.keys(json).forEach((key) => {
+            json[key] = parseFloat(json[key]);
+          });
+
+          try {
+            const response = await fetch("/predict", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(json),
+            });
+
+            const resultEl = document.getElementById("result");
+
+            if (response.ok) {
+              const data = await response.json();
+              resultEl.innerText =
+                data.prediction === 1
+                  ? "Prediction: Malignant"
+                  : "Prediction: Benign";
+              resultEl.style.color = data.prediction === 1 ? "#e74c3c" : "#27ae60";
+            } else {
+              const error = await response.json();
+              resultEl.innerText = `Error: ${error.detail || "Unknown error"}`;
+              resultEl.style.color = "#e74c3c";
+            }
+          } catch (err) {
+            document.getElementById("result").innerText = `Error: ${err.message}`;
+            document.getElementById("result").style.color = "#e74c3c";
+          }
+        });
+    </script>
+  </body>
+</html>
